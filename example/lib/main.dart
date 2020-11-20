@@ -61,6 +61,22 @@ class _MyHomePageState extends State<MyHomePage> {
                   selectedValue: ex1,
                   backgroundColor: Colors.amber,
                   items: List.generate(50, (index) => "Item $index"),
+                  dismissible: true,
+                  dismissDirection: DismissDirection.horizontal,
+                  dismissibleBackground: Container(
+                    child: Row(
+                      children: [
+                        Spacer(),
+                        Icon(
+                          Icons.edit,
+                        ),
+                        SizedBox(
+                          width: 20,
+                        )
+                      ],
+                    ),
+                    decoration: BoxDecoration(color: Colors.greenAccent),
+                  ),
                   onChange: (String selected) {
                     setState(() {
                       ex1 = selected;
@@ -150,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   label: "Multiple Items Example",
                   multipleSelectedValues: ex5,
                   items: List.generate(50, (index) => "Item $index"),
-                  itemBuilder: (context, item, isSelected){
+                  itemBuilder: (context, item, isSelected) {
                     return ListTile(
                       trailing: isSelected ? Icon(Icons.check) : null,
                       title: Text(item),

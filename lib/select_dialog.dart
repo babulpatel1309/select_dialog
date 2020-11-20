@@ -24,6 +24,7 @@ class SelectDialog<T> extends StatefulWidget {
   final SelectOneItemBuilderType<T> itemBuilder;
   final WidgetBuilder emptyBuilder;
   final WidgetBuilder loadingBuilder;
+
   ///![image](https://user-images.githubusercontent.com/16373553/94357272-d599e500-006d-11eb-9bcb-5f067943011e.png)
   final ButtonBuilderType okButtonBuilder;
   final ErrorBuilderType errorBuilder;
@@ -44,6 +45,13 @@ class SelectDialog<T> extends StatefulWidget {
   ///|---|---|
   ///|![image](https://user-images.githubusercontent.com/16373553/80189438-0a020480-85e9-11ea-8e63-3fabfa42c1c7.png)|![image](https://user-images.githubusercontent.com/16373553/80190562-e2ac3700-85ea-11ea-82ef-3383ae32ab02.png)|
   final BoxConstraints constraints;
+  final EdgeInsets contentPadding;
+
+  final bool dismissible;
+  final Widget dismissibleBackground;
+  final Widget dismissibleBackgroundSecondary;
+  final DismissDirection dismissDirection;
+  final Function onDismissed;
 
   const SelectDialog({
     Key key,
@@ -51,7 +59,13 @@ class SelectDialog<T> extends StatefulWidget {
     this.showSearchBox,
     this.onChange,
     this.onMultipleItemsChange,
+    this.dismissible,
+    this.contentPadding,
     this.selectedValue,
+    this.dismissibleBackground,
+    this.dismissibleBackgroundSecondary,
+    this.onDismissed,
+    this.dismissDirection,
     this.multipleSelectedValues,
     this.onFind,
     this.itemBuilder,
@@ -95,6 +109,12 @@ class SelectDialog<T> extends StatefulWidget {
     bool alwaysShowScrollBar = false,
     int searchBoxMaxLines = 1,
     int searchBoxMinLines = 1,
+    EdgeInsets contentPadding,
+    bool dismissible,
+    Widget dismissibleBackground,
+    Widget dismissibleBackgroundSecondary,
+    Function onDismissed,
+    DismissDirection dismissDirection,
   }) {
     return showDialog(
       context: context,
@@ -105,6 +125,8 @@ class SelectDialog<T> extends StatefulWidget {
             label ?? "",
             style: titleStyle,
           ),
+          contentPadding:
+              contentPadding ?? const EdgeInsets.fromLTRB(0.0, 12.0, 0.0, 16.0),
           content: SelectDialog<T>(
             selectedValue: selectedValue,
             multipleSelectedValues: multipleSelectedValues,
@@ -117,7 +139,12 @@ class SelectDialog<T> extends StatefulWidget {
             searchBoxDecoration: searchBoxDecoration,
             searchHint: searchHint,
             titleStyle: titleStyle,
+            dismissDirection: dismissDirection,
+            dismissible: dismissible,
+            dismissibleBackground: dismissibleBackground,
+            dismissibleBackgroundSecondary: dismissibleBackgroundSecondary,
             emptyBuilder: emptyBuilder,
+            onDismissed: onDismissed,
             okButtonBuilder: okButtonBuilder,
             loadingBuilder: loadingBuilder,
             errorBuilder: errorBuilder,
@@ -263,23 +290,49 @@ class _SelectDialogState<T> extends State<SelectDialog<T>> {
                             multipleItemsBloc.selectedItems?.contains(item) ??
                                 false;
                         isSelected = isSelected || item == widget.selectedValue;
-                        return InkWell(
-                          child: itemBuilder(context, item, isSelected),
-                          onTap: () {
-                            if (isMultipleItems) {
-                              setState(() {
-                                if (isSelected) {
-                                  multipleItemsBloc.unselectItem(item);
-                                } else {
-                                  multipleItemsBloc.selectItem(item);
-                                }
-                              });
-                            } else {
-                              onChange?.call(item);
-                              Navigator.pop(context);
-                            }
-                          },
-                        );
+                        return widget.dismissible
+                            ? Dismissible(
+                                key: Key(index.toString()),
+                                background: widget.dismissibleBackground,
+                                secondaryBackground:
+                                    widget.dismissibleBackgroundSecondary,
+                                direction: widget.dismissDirection,
+                                onDismissed: (direction) =>
+                                    widget.onDismissed(direction) ?? null,
+                                child: InkWell(
+                                  child: itemBuilder(context, item, isSelected),
+                                  onTap: () {
+                                    if (isMultipleItems) {
+                                      setState(() {
+                                        if (isSelected) {
+                                          multipleItemsBloc.unselectItem(item);
+                                        } else {
+                                          multipleItemsBloc.selectItem(item);
+                                        }
+                                      });
+                                    } else {
+                                      onChange?.call(item);
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                ))
+                            : InkWell(
+                                child: itemBuilder(context, item, isSelected),
+                                onTap: () {
+                                  if (isMultipleItems) {
+                                    setState(() {
+                                      if (isSelected) {
+                                        multipleItemsBloc.unselectItem(item);
+                                      } else {
+                                        multipleItemsBloc.selectItem(item);
+                                      }
+                                    });
+                                  } else {
+                                    onChange?.call(item);
+                                    Navigator.pop(context);
+                                  }
+                                },
+                              );
                       },
                     ),
                   );
